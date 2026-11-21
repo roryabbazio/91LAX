@@ -89,9 +89,10 @@ svg.field.snap .pl, svg.field.snap #ball{transition:none!important}
   .trail{animation:fade .5s ease both}
   @keyframes fade{from{opacity:0}to{opacity:1}}
 }
-.legend{display:flex;justify-content:center;gap:10px;font-size:11px;color:var(--muted);padding:4px 2px 4px;white-space:nowrap;overflow:hidden}
-.legend .pip{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--orange);font:700 9.5px var(--body);margin-right:5px;vertical-align:-3px}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px;box-sizing:border-box}
+.legend{display:flex;justify-content:center;align-items:center;gap:10px;font-size:11px;line-height:15px;color:var(--muted);padding:4px 2px 4px;white-space:nowrap;overflow:hidden}
+.legend span{display:inline-flex;align-items:center}
+.legend .pip{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--orange);font:700 9.5px/1 var(--body);margin-right:5px;flex:0 0 auto}
+.legend i{display:inline-block;width:15px;height:15px;border-radius:50%;margin-right:5px;box-sizing:border-box;flex:0 0 auto}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
 .call{font-family:var(--display);font-size:26px;line-height:1.15;margin:0 0 4px;color:var(--orange)}
 .step-of{font-size:13px;color:var(--muted);margin:0 0 6px}
