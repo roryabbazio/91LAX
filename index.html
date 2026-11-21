@@ -89,10 +89,10 @@ svg.field.snap .pl, svg.field.snap #ball{transition:none!important}
   .trail{animation:fade .5s ease both}
   @keyframes fade{from{opacity:0}to{opacity:1}}
 }
-.legend{display:flex;justify-content:center;align-items:center;gap:10px;font-size:11px;line-height:15px;color:var(--muted);padding:4px 2px 4px;white-space:nowrap;overflow:hidden}
+.legend{display:flex;justify-content:center;align-items:center;gap:8px;font-size:11px;line-height:15px;color:var(--muted);padding:4px 0;white-space:nowrap;flex-wrap:wrap;row-gap:4px}
 .legend span{display:inline-flex;align-items:center}
-.legend .pip{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--orange);font:700 9.5px/1 var(--body);margin-right:5px;flex:0 0 auto}
-.legend i{display:inline-block;width:15px;height:15px;border-radius:50%;margin-right:5px;box-sizing:border-box;flex:0 0 auto}
+.legend .pip{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--orange);font:700 9.5px/1 var(--body);margin-right:4px;flex:0 0 auto}
+.legend i{display:inline-block;width:15px;height:15px;border-radius:50%;margin-right:4px;box-sizing:border-box;flex:0 0 auto}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
 .call{font-family:var(--display);font-size:26px;line-height:1.15;margin:0 0 4px;color:var(--orange)}
 .step-of{font-size:13px;color:var(--muted);margin:0 0 6px}
@@ -178,7 +178,7 @@ svg.field.snap .pl, svg.field.snap #ball{transition:none!important}
     <div class="legend">
       <span><b class="pip" style="color:#142F60">S</b>Short stick</span>
       <span><b class="pip" style="color:#fff">L</b>Long pole</span>
-      <span><i style="background:#E8EEF7"></i>Them</span>
+      <span><i style="background:#E8EEF7"></i>Opponent</span>
       <span><i style="background:var(--ball)"></i>Ball</span>
       <span><i style="border:2px dashed var(--orange-soft);background:none"></i>Locked</span>
     </div>
