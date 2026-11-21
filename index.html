@@ -89,7 +89,8 @@ svg.field.snap .pl, svg.field.snap #ball{transition:none!important}
   .trail{animation:fade .5s ease both}
   @keyframes fade{from{opacity:0}to{opacity:1}}
 }
-.legend{display:flex;justify-content:center;gap:12px;font-size:11px;color:var(--muted);padding:4px 2px 4px;white-space:nowrap;overflow:hidden}
+.legend{display:flex;justify-content:center;gap:10px;font-size:11px;color:var(--muted);padding:4px 2px 4px;white-space:nowrap;overflow:hidden}
+.legend .pip{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:var(--orange);font:700 9.5px var(--body);margin-right:5px;vertical-align:-3px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px;box-sizing:border-box}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
 .call{font-family:var(--display);font-size:26px;line-height:1.15;margin:0 0 4px;color:var(--orange)}
@@ -174,7 +175,8 @@ svg.field.snap .pl, svg.field.snap #ball{transition:none!important}
       <g id="tags"></g>
     </svg>
     <div class="legend">
-      <span><i style="background:var(--orange)"></i>Us (S short, L pole)</span>
+      <span><b class="pip" style="color:#142F60">S</b>Short stick</span>
+      <span><b class="pip" style="color:#fff">L</b>Long pole</span>
       <span><i style="background:#E8EEF7"></i>Them</span>
       <span><i style="background:var(--ball)"></i>Ball</span>
       <span><i style="border:2px dashed var(--orange-soft);background:none"></i>Locked</span>
