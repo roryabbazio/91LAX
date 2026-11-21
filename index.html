@@ -390,7 +390,7 @@ function render(playChanged){
     if(!p){e.g.style.display='none';e.tg.style.display='none';return;}
     e.g.style.display='';
     e.g.style.transform=`translate(${p[0]}px,${p[1]}px)`;
-    if(id[0]!=='A')e.label.textContent=play.labels[id]||'D';
+    if(id[0]!=='A'){const lb=play.labels[id]||'D';e.label.textContent=lb;if(id!=='G')e.label.setAttribute('fill',lb==='S'?'#142F60':'#fff');}
     e.ring.style.display=st.deny[id]?'':'none';
     const tag=st.tags[id];
     e.tg.style.transform=e.g.style.transform;
