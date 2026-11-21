@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>D Calls</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0A1730">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="D Calls">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fugaz+One&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Team 91 world: deep navy field, orange for us, white for them. One column, bottom tab bar. */
+  --bg:#0A1730;
+  --surface:#11264A;
+  --surface-2:#173462;
+  --line:#2A4A80;
+  --text:#F2F5FA;
+  --muted:#A9B8D1;
+  --orange:#F15C22;
+  --orange-soft:#FF9A6B;
+  --blue:#2454AC;
+  --ball:#FFD23F;
+  --good:#3DD68C;
+  --bad:#FF6B6B;
+  --field:#0F2E57;
+  --display:"Fugaz One", "Arial Black", Impact, sans-serif;
+  --body:Roboto, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.5;display:flex;flex-direction:column;-webkit-tap-highlight-color:transparent}
+header{padding:calc(env(safe-area-inset-top) + 12px) 16px 10px;background:var(--bg);border-bottom:1px solid var(--line);display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+header h1{font-family:var(--display);font-weight:400;font-size:22px;margin:0;letter-spacing:.3px}
+header h1 span{color:var(--orange)}
+header p{margin:0;color:var(--muted);font-size:13px}
+main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.wrap{max-width:560px;margin:0 auto;padding:14px 16px 24px;display:flex;flex-direction:column;gap:14px}
+.view:not(.on){display:none!important}
+nav{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav button{background:none;border:0;color:var(--muted);font:500 12px var(--body);padding:10px 4px 9px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;min-height:56px}
+nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{color:var(--orange)}
+button{font-family:var(--body)}
+button:focus-visible,.chip:focus-visible{outline:2px solid var(--ball);outline-offset:2px}
+.label{font-size:12px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:999px;padding:8px 14px;font:500 14px var(--body);cursor:pointer;min-height:38px}
+.chip.on{background:var(--orange);border-color:var(--orange);color:#fff}
+main.fit .wrap{height:100%;padding-top:10px;padding-bottom:12px}
+#v-plays.on{display:flex;flex-direction:column;gap:10px;height:100%;min-height:540px}
+.picker{position:relative;display:flex;align-items:center;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:2px 16px;scroll-snap-type:x proximity;flex:0 0 auto}
+.picker::-webkit-scrollbar{display:none}
+.picker .chip{flex:0 0 auto;scroll-snap-align:start}
+.picker .sep{flex:0 0 auto;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:700;white-space:nowrap;padding-left:10px;border-left:1px solid var(--line)}
+.picker .sep:first-child{padding-left:0;border-left:0}
+.field-box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px 6px 2px;flex:1 1 auto;min-height:230px;display:flex;flex-direction:column;position:relative;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:pointer}
+svg.field{display:block;flex:1 1 auto;min-height:0;width:100%;height:100%}
+.hint{position:absolute;top:12px;right:12px;font-size:12px;color:var(--text);background:rgba(10,23,48,.82);border:1px solid var(--line);padding:3px 9px;border-radius:999px;pointer-events:none;transition:opacity .4s}
+.hint.gone{opacity:0}
+.capcard{flex:0 0 auto;min-height:112px;padding:10px 14px 12px}
+.caphead{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.caphead .call{font-size:22px;margin:0 0 2px}
+.caphead .step-of{margin:0;white-space:nowrap;font-size:12px}
+#v-plays .ctrls{flex:0 0 auto}
+#v-plays .dots{flex:0 0 auto}
+.tg text{font:700 11.5px var(--body)}
+@media (max-height:760px){
+  header{padding-top:calc(env(safe-area-inset-top) + 8px);padding-bottom:6px}
+  header h1{font-size:19px}
+  .capcard{min-height:92px;padding:8px 12px 10px}
+  .caphead .call{font-size:19px}
+  .cap{font-size:15px;line-height:1.4}
+  .btn{min-height:44px}
+  #v-plays.on{gap:8px;min-height:500px}
+  nav button{min-height:50px;padding:7px 4px 6px}
+}
+svg.field.snap .pl, svg.field.snap #ball{transition:none!important}
+@media (prefers-reduced-motion:no-preference){
+  .pl,#ball{transition:transform .75s cubic-bezier(.45,.05,.25,1)}
+  .trail{animation:fade .5s ease both}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+}
+.legend{display:flex;justify-content:center;gap:12px;font-size:11px;color:var(--muted);padding:4px 2px 4px;white-space:nowrap;overflow:hidden}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px;box-sizing:border-box}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.call{font-family:var(--display);font-size:26px;line-height:1.15;margin:0 0 4px;color:var(--orange)}
+.step-of{font-size:13px;color:var(--muted);margin:0 0 6px}
+.cap{margin:0;font-size:16px}
+.ctrls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.btn{background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:12px;min-height:48px;font:500 15px var(--body);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 12px}
+.btn.primary{background:var(--orange);border-color:var(--orange);color:#fff}
+.btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.dots{display:flex;justify-content:center;gap:7px;padding-top:2px}
+.dots button{width:10px;height:10px;border-radius:50%;border:0;background:var(--line);padding:0;cursor:pointer}
+.dots button.on{background:var(--orange)}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.seg button{background:none;border:0;color:var(--muted);font:500 14px var(--body);border-radius:9px;min-height:40px;cursor:pointer}
+.seg button.on{background:var(--surface-2);color:var(--text)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat b{display:block;font-family:var(--display);font-weight:400;font-size:24px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.prompt{text-align:center;padding:22px 16px}
+.prompt .q{font-size:14px;color:var(--muted);margin:0 0 8px}
+.prompt .big{font-family:var(--display);font-size:36px;line-height:1.1;color:var(--orange);margin:0}
+.prompt .mid{font-size:20px;font-weight:500;margin:0;text-wrap:balance}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{text-align:left;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:13px 14px;font:500 16px var(--body);cursor:pointer;min-height:52px}
+.opt.right{border-color:var(--good);background:#123d33}
+.opt.wrong{border-color:var(--bad);background:#43202b}
+.opt[disabled]{cursor:default}
+.fb{border-radius:12px;padding:12px 14px;border:1px solid var(--line);background:var(--surface)}
+.fb h3{margin:0 0 4px;font-size:17px}
+.fb p{margin:0 0 10px;color:var(--text)}
+.fb.good h3{color:var(--good)}
+.fb.bad h3{color:var(--bad)}
+.row{display:flex;gap:10px}
+.row .btn{flex:1}
+.flash{min-height:280px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;cursor:pointer;user-select:none;-webkit-user-select:none;padding:24px 20px;gap:10px;border-radius:18px}
+.flash.front{background:var(--surface-2);border:2px solid var(--orange)}
+.flash.back{background:var(--surface);border:2px solid var(--line)}
+.flash .big{font-family:var(--display);font-size:46px;line-height:1.05;color:var(--orange);margin:0}
+.flash .hint{font-size:13px;color:var(--muted);margin:0}
+.flash .kid{font-size:19px;font-weight:500;margin:0;text-wrap:balance}
+.flash .coach{font-size:14px;color:var(--muted);margin:0}
+.flash .coach b{color:var(--text);font-weight:500}
+.count{text-align:center;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.sheet h2{font-family:var(--display);font-weight:400;font-size:20px;margin:6px 0 8px;color:var(--orange)}
+.list{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}
+.item{display:grid;grid-template-columns:92px 1fr auto;gap:10px;align-items:start;padding:12px 12px 12px 14px;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.item .nm{font-family:var(--display);font-size:17px;line-height:1.2;color:var(--text)}
+.item .cw{margin:0;font-size:15px}
+.item .kw{margin:3px 0 0;font-size:13px;color:var(--muted)}
+.watch{background:var(--surface-2);color:var(--orange);border:1px solid var(--line);border-radius:10px;font:500 13px var(--body);padding:7px 10px;cursor:pointer;white-space:nowrap}
+.note{font-size:13px;color:var(--muted);margin:0}
+.stack{display:flex;flex-direction:column;gap:14px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<header>
+  <h1><span>D</span> Calls</h1>
+  <p>Team 91</p>
+</header>
+
+<main id="main">
+<div class="wrap">
+
+<section class="view" id="v-plays" aria-label="Plays">
+  <div class="picker" id="picker" role="tablist" aria-label="Choose a play"></div>
+  <div class="field-box" id="fieldBox">
+    <span class="hint" id="hint">Tap or swipe the field</span>
+    <svg class="field" id="field" viewBox="18 34 324 374" role="img" aria-labelledby="ftitle">
+      <title id="ftitle">Lacrosse field showing the selected defensive call</title>
+      <rect x="24" y="6" width="312" height="398" rx="10" fill="#0F2E57" stroke="rgba(255,255,255,.45)" stroke-width="1.5"/>
+      <line x1="24" y1="48" x2="336" y2="48" stroke="rgba(255,255,255,.25)" stroke-width="1" stroke-dasharray="6 5"/>
+      <line x1="24" y1="330" x2="336" y2="330" stroke="rgba(255,255,255,.3)" stroke-width="1"/>
+      <circle cx="180" cy="330" r="30" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.55)" stroke-width="1.5"/>
+      <path d="M168 330 L180 346 L192 330 Z" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
+      <polygon id="shape" points="" fill="rgba(241,92,34,.10)" stroke="rgba(255,154,107,.7)" stroke-width="1.5" stroke-dasharray="5 4"/>
+      <g id="trails"></g>
+      <g id="players"></g>
+      <g id="ball"><circle r="5" fill="#FFD23F" stroke="#0A1730" stroke-width="1.5"/></g>
+      <g id="tags"></g>
+    </svg>
+    <div class="legend">
+      <span><i style="background:var(--orange)"></i>Us (S short, L pole)</span>
+      <span><i style="background:#E8EEF7"></i>Them</span>
+      <span><i style="background:var(--ball)"></i>Ball</span>
+      <span><i style="border:2px dashed var(--orange-soft);background:none"></i>Locked</span>
+    </div>
+  </div>
+  <div class="card capcard" aria-live="polite">
+    <div class="caphead"><p class="call" id="cName"></p><p class="step-of" id="stepOf"></p></div>
+    <p class="cap" id="cText"></p>
+  </div>
+  <div class="ctrls">
+    <button class="btn" id="bBack" aria-label="Previous step"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>Back</button>
+    <button class="btn" id="bPlay"><svg viewBox="0 0 24 24"><path d="M7 5l12 7-12 7z"/></svg><span>Play</span></button>
+    <button class="btn primary" id="bNext" aria-label="Next step"><span>Next</span><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+  </div>
+  <div class="dots" id="dots"></div>
+</section>
+
+<section class="view stack" id="v-drill" aria-label="Call it out drill">
+  <div class="seg" id="dMode">
+    <button data-m="call" class="on">Hear the call</button>
+    <button data-m="name">Name the call</button>
+  </div>
+  <div id="drillBody" class="stack"></div>
+</section>
+
+<section class="view stack" id="v-cards" aria-label="Flashcards">
+  <div class="seg" id="cFilter">
+    <button data-g="all" class="on">All</button>
+    <button data-g="6v6">6 on 6</button>
+    <button data-g="md">Man down</button>
+  </div>
+  <div id="flash" class="flash front" role="button" tabindex="0" aria-label="Flip card"></div>
+  <p class="count" id="cCount"></p>
+  <div class="row">
+    <button class="btn" id="cPrev" aria-label="Previous card"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>Prev</button>
+    <button class="btn" id="cShuf"><svg viewBox="0 0 24 24"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>Shuffle</button>
+    <button class="btn primary" id="cNext" aria-label="Next card">Next<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+  </div>
+</section>
+
+<section class="view sheet stack" id="v-sheet" aria-label="Coach's sheet">
+  <p class="note">Coach's words first, the plain version underneath. Tap Watch to see it on the field.</p>
+  <div><h2>6 on 6</h2><div class="list" id="s66"></div></div>
+  <div><h2>Man down</h2><div class="list" id="sMD"></div></div>
+  <p class="note">Oreo, Diamond and Zombie spots are a best guess at the shape. Check exact spots with the coach.</p>
+</section>
+
+</div>
+</main>
+
+<nav id="nav">
+  <button data-v="plays" class="on"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M3 12h6M15 12h6"/></svg>Plays</button>
+  <button data-v="drill"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 16 0 8 8 0 1 0-16 0"/><path d="M12 8v4l3 2"/></svg>Drill</button>
+  <button data-v="cards"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="14" height="14" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v12"/></svg>Cards</button>
+  <button data-v="sheet"><svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>Sheet</button>
+</nav>
+
+<script>
+const GOAL=[180,330];
+const L66={D1:'S',D2:'S',D3:'L',D4:'L',D5:'L',D6:'L',G:'G'};
+const LMD={D1:'D',D2:'D',D3:'D',D4:'D',D5:'D',G:'G'};
+const A66={A1:[95,120],A2:[180,105],A3:[265,120],A4:[70,262],A5:[290,262],A6:[180,270]};
+const M66={D1:'A1',D2:'A2',D3:'A3',D4:'A4',D5:'A5',D6:'A6'};
+const AMD={A1:[100,150],A2:[180,135],A3:[260,150],A4:[118,300],A5:[180,272],A6:[242,300]};
+const BOX={G:[180,322],D1:[135,190],D2:[225,190],D3:[140,262],D4:[220,262],D5:[180,296]};
+const ring=(angles)=>{const o={};angles.forEach((a,i)=>{const r=a*Math.PI/180;o['D'+(i+1)]=[+(180+52*Math.sin(r)).toFixed(1),+(322-52*Math.cos(r)).toFixed(1)];});return o;};
+
+const PLAYS=[
+{id:'orange',name:'Orange',g:'6v6',labels:L66,A:A66,mark:M66,at:{G:[180,322]},frames:[
+ {t:'Set',d:'Everyone is on their guy. The ball is on the right wing.',ball:'A5'},
+ {t:'Orange!',d:'The two short sticks lock off. They glue to their guys so the ball can never go there.',mode:{D1:'deny',D2:'deny'},tags:{D1:'Lock',D2:'Lock'}},
+ {t:'4 on 4',d:'Now it is four long poles against four guys. The short sticks stay locked even when the ball moves.',ball:'A6',shape:['D3','D5','D6','D4']}
+]},
+{id:'black',name:'Black',g:'6v6',labels:L66,A:A66,mark:M66,at:{G:[180,322]},frames:[
+ {t:'Set',d:'Everyone is on their guy. The ball is up top.',ball:'A2'},
+ {t:'Black!',d:'Everyone locks off their guy. Nobody slides to help.',mode:{D1:'deny',D3:'deny',D4:'deny',D5:'deny',D6:'deny'},tags:{D2:'Eat!'}},
+ {t:'Eat!',d:'The guy on the ball has to win his 1 on 1. No help is coming, so he stays on his hands and wins it.',A:{A2:[202,196]},tags:{D2:'1 on 1'}}
+]},
+{id:'purple',name:'Purple',g:'6v6',labels:L66,A:A66,mark:M66,at:{G:[180,322]},frames:[
+ {t:'Set',d:'We are down a couple goals and time is almost out. We need the ball back now.',ball:'A1'},
+ {t:'Goalie out',d:'The goalie comes out of the net and locks off the nearest guy. Everyone off the ball locks off too.',at:{G:null},mark:{G:'A6',D6:'A2'},mode:{G:'deny',D6:'deny',D3:'deny',D4:'deny',D5:'deny'},tags:{G:'Lock',D6:'Lock'}},
+ {t:'Purple!',d:'Two guys go after the ball and harass him until we get it back. Everyone else stays locked.',at:{D1:[112,136],D2:[80,138]},tags:{D1:'Trap',D2:'Trap'}}
+]},
+{id:'bingo',name:'Bingo',g:'6v6',labels:L66,A:A66,mark:M66,at:{G:[180,322]},frames:[
+ {t:'Set',d:'Everyone is on their guy. The ball is up top on the right.',ball:'A3'},
+ {t:'Bingo!',d:'Two of us double the ball carrier. Squeeze him so he cannot pass or shoot.',at:{D2:[248,104]},tags:{D2:'Bingo',D3:'Bingo'}},
+ {t:'Ball pops',d:'Keep squeezing until the ball pops loose. Then scoop it up and go.',ball:null,ballAt:[288,96]}
+]},
+{id:'slide',name:'Slide chain',g:'6v6',labels:L66,A:A66,mark:M66,at:{G:[180,322]},frames:[
+ {t:'Set',d:'Everyone is on their guy. The ball is on the right wing.',ball:'A5'},
+ {t:'Fire!',d:'Their ball carrier beats his defender and runs at the goal. Someone yells Fire, which means slide.',A:{A5:[246,286]},at:{D5:[276,266]},tags:{D5:'Beat'}},
+ {t:'Hot',d:'The closest defender leaves his guy and stops the ball. He is Hot. Now his guy on the crease is open.',at:{D6:[222,306]},tags:{D6:'Hot'}},
+ {t:'2',d:'The backside defender helps in and covers the Hot guy’s man so he cannot catch an easy pass. He is the 2.',at:{D4:[160,300]},tags:{D6:'Hot',D4:'2'}},
+ {t:'Rico',d:'The defender who got beat recovers. He sprints back to the open guy near the crease.',at:{D5:[205,266]},tags:{D6:'Hot',D4:'2',D5:'Rico'}},
+ {t:'Bump!',d:'He yells Bump! That tells the 2 guy he can leave the crease and get back to his own man. Everyone is covered again.',at:{D5:null,D4:null,D6:null},mark:{D5:'A6',D6:'A5'},tags:{D5:'Bump!'}}
+]},
+{id:'drive',name:'Drive',g:'6v6',labels:L66,A:A66,mark:M66,at:{G:[180,322]},frames:[
+ {t:'Set',d:'The ball is on the right wing and he wants to get to the middle.',ball:'A5'},
+ {t:'Drive',d:'Find that spot on his hip and push him down the side, away from the middle of the field.',A:{A5:[302,310]},tags:{D5:'Drive'}},
+ {t:'Corner',d:'Keep driving him to the corner. Nobody scores from back there. If you are up top, drive him to the top corner instead.',A:{A5:[316,376]},tags:{D5:'Drive'}}
+]},
+{id:'mummy',name:'Mummy',g:'6v6',labels:L66,A:A66,mark:M66,at:{G:[180,322]},frames:[
+ {t:'Set',d:'Their best player is up top in the middle.',ball:'A3',tags:{A2:'Best'}},
+ {t:'Mummy!',d:'One short stick wraps up their best player like a mummy. He never lets him touch the ball.',mode:{D2:'deny'},tags:{D2:'Mummy',A2:'Best'}},
+ {t:'5 on 5',d:'Everyone else plays 5 on 5. The mummy stays glued even when the ball moves.',ball:'A5',tags:{D2:'Mummy'},shape:['D1','D3','D5','D6','D4']}
+]},
+{id:'oreo',name:'Oreo',g:'md',labels:LMD,A:AMD,at:BOX,frames:[
+ {t:'Oreo',d:'Our base man down defense, called box and one. Four guys make a box and one guy plays the middle by the crease.',ball:'A2',shape:['D1','D2','D4','D3'],tags:{D5:'One'}},
+ {t:'Ball left',d:'When the ball goes to a side, the closest box guy steps out to it and the box slides with him.',ball:'A1',at:{D1:[114,172],D2:[198,200],D3:[132,250],D4:[210,268]},shape:['D1','D2','D4','D3']},
+ {t:'Ball right',d:'Ball swings the other way, the box slides the other way. Keep talking so nobody gets left open.',ball:'A3',at:{D2:[246,172],D1:[162,200],D4:[228,250],D3:[150,268]},shape:['D1','D2','D4','D3']}
+]},
+{id:'diamond',name:'Diamond',g:'md',labels:LMD,A:{A1:[180,140],A2:[70,240],A3:[140,250],A4:[220,250],A5:[290,240],A6:[180,380]},at:{G:[180,322],D1:[180,182],D2:[118,266],D3:[242,266],D4:[180,298],D5:[180,356]},frames:[
+ {t:'Diamond',d:'They line up 1-4-1: one guy up top, four across the middle, one behind the goal. We answer with our diamond.',ball:'A1',shape:['D1','D3','D4','D2']},
+ {t:'Ball left',d:'Ball goes to the side. The side guy steps out to it and the diamond tilts toward the ball.',ball:'A2',at:{D2:[86,256],D1:[155,200],D4:[168,292],D3:[230,272]},shape:['D1','D3','D4','D2']},
+ {t:'Ball behind',d:'Ball goes behind the goal. The guy back there steps up on him and the diamond pinches in tight.',ball:'A6',at:{D5:[180,357],D4:[182,296],D2:[112,262],D1:[180,190],D3:[245,262]},shape:['D1','D3','D4','D2']}
+]},
+{id:'zombie',name:'Zombie',g:'md',labels:LMD,A:{A1:[100,150],A2:[180,135],A3:[260,150],A4:[92,300],A5:[180,232],A6:[268,300]},at:Object.assign({G:[180,322]},ring([-72,-36,0,36,72])),frames:[
+ {t:'Zombie',d:'We lock the crease. Five guys stay tight around the goal like zombies guarding a door.',ball:'A2',shape:['D1','D2','D3','D4','D5']},
+ {t:'Rotate',d:'When the ball moves, the whole group turns toward it. Nobody leaves the crease.',ball:'A1',at:ring([-90,-54,-18,18,54]),shape:['D1','D2','D3','D4','D5']},
+ {t:'Rotate back',d:'Ball swings across, and the group turns the other way. Stay tight and keep sticks in the passing lanes.',ball:'A6',at:ring([-54,-18,18,54,90]),shape:['D1','D2','D3','D4','D5']}
+]},
+{id:'mummymd',name:'Mummy',g:'md',labels:LMD,A:AMD,at:BOX,frames:[
+ {t:'Set',d:'We are a man down. Their most important player is up top.',ball:'A1',tags:{A2:'Key'},shape:['D1','D2','D4','D3']},
+ {t:'Mummy!',d:'One guy locks off their key player. Now four of us guard five, so we have to help each other.',at:{D2:null,D1:[128,192],D5:[232,192],D3:[148,272],D4:[212,272]},mark:{D2:'A2'},mode:{D2:'deny'},tags:{D2:'Mummy'},shape:['D1','D5','D4','D3']},
+ {t:'Talk!',d:'Help in and talk the whole time. Ball! Help! I got him! The mummy stays glued.',ball:'A6',at:{D5:[228,282],D4:[201,290],D1:[140,210],D3:[150,282]},tags:{D2:'Mummy',D5:'Ball!',D1:'Talk'},shape:['D1','D5','D4','D3']}
+]}
+];
+
+const CALLS=[
+{id:'orange',n:'Orange',g:'6v6',p:'orange',f:1,coach:'Short sticks lock off, we are 4v4 with all long poles.',kid:'Short sticks lock off their guys. The four long poles play 4 on 4.',s:'Short sticks lock off, poles play 4 on 4'},
+{id:'black',n:'Black',g:'6v6',p:'black',f:1,coach:'Everyone lock off, let the player on ball EAT!!!!',kid:'Everyone locks off their guy. The guy on the ball has to win his 1 on 1. No help is coming.',s:'Everyone locks off, ball guy plays 1 on 1'},
+{id:'purple',n:'Purple',g:'6v6',p:'purple',f:1,coach:'Low time, down by a couple goals, goalie comes out of the net and locks off nearest guy. Every other off-ball player locks off their guy. Two guys on the ball harass and get the ball back.',kid:'The emergency button. Goalie comes out to lock a guy, everyone locks, and two guys trap the ball to steal it.',s:'Goalie comes out, two guys trap the ball'},
+{id:'bingo',n:'Bingo',g:'6v6',p:'bingo',f:1,coach:'Double the ball.',kid:'Two of us trap the ball carrier.',s:'Double the ball'},
+{id:'fire',n:'Fire',g:'6v6',p:'slide',f:1,coach:'Slide.',kid:'The alarm. Someone got beat and we need a slide.',s:'Slide! Someone got beat'},
+{id:'hot',n:'Hot',g:'6v6',p:'slide',f:2,coach:'You are the player "FIRING".',kid:'You are the first helper. Leave your guy and stop the ball.',s:'You are the first slider'},
+{id:'two',n:'2',g:'6v6',p:'slide',f:3,coach:'You are helping in from the backside, making sure the "HOT" guy’s man does not catch the ball.',kid:'You are the backup. Cover the Hot guy’s man so he cannot catch an easy pass.',s:'You cover the Hot guy’s man'},
+{id:'rico',n:'Rico',g:'6v6',p:'slide',f:4,coach:'Recover.',kid:'Hustle back to whoever is open.',s:'Recover to the open guy'},
+{id:'bump',n:'Bump',g:'6v6',p:'slide',f:5,coach:'When you recover to the open guy, yell "BUMP" to let the "2" guy know he can leave the crease.',kid:'Yell it when you reach the open guy. It tells the 2 guy he can leave the crease.',s:'I got him, the 2 guy can leave'},
+{id:'drive',n:'Drive',g:'6v6',p:'drive',f:1,coach:'Find that "spot" on the offensive player’s hip and drive him to the bottom or top corner of the field (depending on where you are).',kid:'Get on his hip and push him to the corner, away from the goal.',s:'Push him to the corner'},
+{id:'mummy6',n:'Mummy',g:'6v6',p:'mummy',f:1,coach:'Lock off their best player (with a short stick), and play 5v5.',kid:'One short stick wraps up their best player. Everyone else plays 5 on 5.',s:'Short stick locks their best player, play 5 on 5'},
+{id:'oreo',n:'Oreo',g:'md',p:'oreo',f:0,coach:'Base man-down defense, aka, "box and one".',kid:'Our normal man down defense, called box and one.',s:'Box and one, our base man down'},
+{id:'diamond',n:'Diamond',g:'md',p:'diamond',f:0,coach:'Run against a 1-4-1 set (boys know this).',kid:'Our setup when they line up 1-4-1. You already know this one from practice.',s:'Our man down against a 1-4-1'},
+{id:'zombie',n:'Zombie',g:'md',p:'zombie',f:0,coach:'Lock the crease and rotate around.',kid:'Guard the crease like zombies guarding a door, and turn with the ball.',s:'Lock the crease and rotate'},
+{id:'mummymd',n:'Mummy',g:'md',p:'mummymd',f:1,coach:'Lock the most important player and play 5v4. Need to help in and communicate!!!!',kid:'Lock their most important player. Four of us guard five, so help and talk the whole time.',s:'Lock their key player, play 4 against 5'}
+];
+
+const $=(id)=>document.getElementById(id);
+const esc=(t)=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const grpName=(g)=>g==='md'?'Man down':'6 on 6';
+
+function off(a,b,d){const vx=b[0]-a[0],vy=b[1]-a[1],n=Math.hypot(vx,vy);if(n<1)return a.slice();return[a[0]+vx/n*d,a[1]+vy/n*d];}
+
+function stateAt(play,k){
+  const s={A:Object.assign({},play.A),at:Object.assign({},play.at||{}),mark:Object.assign({},play.mark||{}),mode:{},ball:null,ballAt:null};
+  for(let i=0;i<=k;i++){
+    const f=play.frames[i];
+    Object.assign(s.A,f.A||{});
+    for(const key of ['at','mark','mode']){const src=f[key]||{};for(const id in src){if(src[id]===null)delete s[key][id];else s[key][id]=src[id];}}
+    if('ball' in f){s.ball=f.ball;if(f.ball)s.ballAt=null;}
+    if('ballAt' in f)s.ballAt=f.ballAt;
+  }
+  const P={};
+  for(const id in s.A)P[id]=s.A[id];
+  const ballPos=s.ball?P[s.ball]:s.ballAt;
+  const deny={};
+  for(const id of Object.keys(play.labels)){
+    if(s.at[id]){P[id]=s.at[id];continue;}
+    const m=s.mark[id];if(!m)continue;
+    const a=P[m];
+    if(s.mode[id]==='deny'&&ballPos&&s.ball!==m){P[id]=off(a,ballPos,22);deny[id]=1;}
+    else P[id]=off(a,GOAL,23);
+  }
+  const f=play.frames[k];
+  return{P,deny,ball:s.ball,ballPos:s.ball?[P[s.ball][0]+9,P[s.ball][1]-9]:s.ballAt,tags:f.tags||{},shape:f.shape||null,t:f.t,d:f.d};
+}
+
+/* Build player elements once */
+const NS='http://www.w3.org/2000/svg';
+const IDS=['A1','A2','A3','A4','A5','A6','G','D1','D2','D3','D4','D5','D6'];
+const EL={};
+(function build(){
+  const g=$('players');
+  IDS.forEach(id=>{
+    const us=id[0]!=='A';
+    const grp=document.createElementNS(NS,'g');grp.setAttribute('class','pl');grp.style.display='none';
+    const ringC=document.createElementNS(NS,'circle');ringC.setAttribute('r','16');ringC.setAttribute('fill','none');ringC.setAttribute('stroke','#FF9A6B');ringC.setAttribute('stroke-width','2');ringC.setAttribute('stroke-dasharray','4 3');ringC.style.display='none';
+    const c=document.createElementNS(NS,'circle');c.setAttribute('r','11.5');
+    c.setAttribute('fill',us?(id==='G'?'#FFB38F':'#F15C22'):'#E8EEF7');
+    c.setAttribute('stroke',us?'#0A1730':'#142F60');c.setAttribute('stroke-width','1.5');
+    const tx=document.createElementNS(NS,'text');tx.setAttribute('text-anchor','middle');tx.setAttribute('dominant-baseline','central');
+    tx.setAttribute('font-family','Roboto, Arial, sans-serif');tx.setAttribute('font-weight','700');tx.setAttribute('font-size','12');
+    tx.setAttribute('fill',us?(id==='G'?'#5A1E05':'#fff'):'#142F60');tx.textContent=us?'':'A';
+    grp.append(ringC,c,tx);g.appendChild(grp);
+    const tg=document.createElementNS(NS,'g');tg.setAttribute('class','pl tg');tg.style.display='none';
+    const pill=document.createElementNS(NS,'rect');pill.setAttribute('y','-35');pill.setAttribute('height','19');pill.setAttribute('rx','9.5');
+    pill.setAttribute('fill',us?'#FFD23F':'#FF6B6B');pill.setAttribute('stroke','#0A1730');pill.setAttribute('stroke-width','1.5');
+    const tri=document.createElementNS(NS,'path');tri.setAttribute('d','M-5 -17 L0 -12 L5 -17 Z');tri.setAttribute('fill',us?'#FFD23F':'#FF6B6B');
+    const tt=document.createElementNS(NS,'text');tt.setAttribute('y','-25.5');tt.setAttribute('text-anchor','middle');tt.setAttribute('dominant-baseline','central');tt.setAttribute('fill',us?'#0A1730':'#fff');
+    tg.append(pill,tri,tt);$('tags').appendChild(tg);
+    EL[id]={g:grp,ring:ringC,label:tx,tg,pill,tt};
+  });
+})();
+
+let cur={play:PLAYS[0],k:0},timer=null;
+
+function render(playChanged){
+  const play=cur.play,k=cur.k,st=stateAt(play,k);
+  const prev=k>0?stateAt(play,k-1):null;
+  const svg=$('field');
+  if(playChanged)svg.classList.add('snap');
+  IDS.forEach(id=>{
+    const e=EL[id],p=st.P[id];
+    if(!p){e.g.style.display='none';e.tg.style.display='none';return;}
+    e.g.style.display='';
+    e.g.style.transform=`translate(${p[0]}px,${p[1]}px)`;
+    if(id[0]!=='A')e.label.textContent=play.labels[id]||'D';
+    e.ring.style.display=st.deny[id]?'':'none';
+    const tag=st.tags[id];
+    e.tg.style.transform=e.g.style.transform;
+    if(tag){
+      e.tg.style.display='';e.tt.textContent=tag;
+      let w=tag.length*7.5;try{w=e.tt.getComputedTextLength()||w;}catch(err){}
+      w=Math.max(w+14,22);e.pill.setAttribute('x',(-w/2).toFixed(1));e.pill.setAttribute('width',w.toFixed(1));
+    }else e.tg.style.display='none';
+  });
+  const b=$('ball');
+  if(st.ballPos){b.style.display='';b.style.transform=`translate(${st.ballPos[0]}px,${st.ballPos[1]}px)`;}else b.style.display='none';
+  const tr=$('trails');tr.innerHTML='';
+  if(prev){
+    IDS.forEach(id=>{
+      const a=prev.P[id],c=st.P[id];if(!a||!c)return;
+      if(Math.hypot(c[0]-a[0],c[1]-a[1])<14)return;
+      const ln=document.createElementNS(NS,'line');
+      ln.setAttribute('x1',a[0]);ln.setAttribute('y1',a[1]);ln.setAttribute('x2',c[0]);ln.setAttribute('y2',c[1]);
+      ln.setAttribute('stroke',id[0]==='A'?'rgba(232,238,247,.45)':'#FF9A6B');ln.setAttribute('stroke-width','2');ln.setAttribute('stroke-dasharray','4 4');ln.setAttribute('class','trail');ln.setAttribute('stroke-linecap','round');
+      tr.appendChild(ln);
+    });
+  }
+  const sh=$('shape');
+  sh.setAttribute('points',st.shape?st.shape.map(id=>st.P[id].map(v=>v.toFixed(1)).join(',')).join(' '):'');
+  if(playChanged){void svg.getBoundingClientRect();requestAnimationFrame(()=>svg.classList.remove('snap'));}
+  $('stepOf').textContent=`${grpName(play.g)} · ${k+1} of ${play.frames.length}`;
+  $('cName').textContent=st.t;
+  $('cText').textContent=st.d;
+  const dots=$('dots');dots.innerHTML='';
+  play.frames.forEach((f,i)=>{const d=document.createElement('button');d.className=i===k?'on':'';d.setAttribute('aria-label','Step '+(i+1)+': '+f.t);d.onclick=()=>{stop();cur.k=i;render();};dots.appendChild(d);});
+  $('bNext').querySelector('span').textContent=k===play.frames.length-1?'Again':'Next';
+  document.querySelectorAll('.chip').forEach(c=>{const on=c.dataset.p===play.id;c.classList.toggle('on',on);c.setAttribute('aria-selected',on);});
+}
+
+function centerChip(smooth){const pk=$('picker'),c=pk.querySelector('.chip.on');if(!c||!pk.clientWidth)return;pk.scrollTo({left:Math.max(0,c.offsetLeft-(pk.clientWidth-c.offsetWidth)/2),behavior:smooth?'smooth':'auto'});}
+function stop(){if(timer){clearInterval(timer);timer=null;}$('bPlay').querySelector('span').textContent='Play';}
+function playAuto(){
+  if(timer){stop();return;}
+  if(cur.k===cur.play.frames.length-1){cur.k=0;render();}
+  $('bPlay').querySelector('span').textContent='Pause';
+  timer=setInterval(()=>{if(cur.k>=cur.play.frames.length-1){stop();return;}cur.k++;render();},2300);
+}
+function openPlay(pid,k){stop();cur.play=PLAYS.find(p=>p.id===pid);cur.k=k||0;render(true);centerChip(true);}
+
+(function picker(){
+  const pk=$('picker');let lastG=null;
+  PLAYS.forEach(p=>{
+    if(p.g!==lastG){const s=document.createElement('span');s.className='sep';s.textContent=grpName(p.g);pk.appendChild(s);lastG=p.g;}
+    const b=document.createElement('button');b.className='chip';b.textContent=p.name;b.dataset.p=p.id;b.setAttribute('role','tab');
+    b.onclick=()=>openPlay(p.id,0);
+    pk.appendChild(b);
+  });
+})();
+function step(dir){stop();const n=cur.play.frames.length;cur.k=(cur.k+dir+n)%n;render();hideHint();}
+function hideHint(){$('hint').classList.add('gone');try{localStorage.setItem('laxHint','1');}catch(e){}}
+try{if(localStorage.getItem('laxHint'))$('hint').classList.add('gone');}catch(e){}
+(function swipe(){
+  const box=$('fieldBox');let x0=null,y0=0,t0=0;
+  box.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;x0=e.clientX;y0=e.clientY;t0=Date.now();});
+  box.addEventListener('pointercancel',()=>{x0=null;});
+  box.addEventListener('pointerup',e=>{
+    if(x0===null)return;const dx=e.clientX-x0,dy=e.clientY-y0,dt=Date.now()-t0;x0=null;
+    if(Math.abs(dx)>40&&Math.abs(dx)>1.5*Math.abs(dy))step(dx<0?1:-1);
+    else if(Math.hypot(dx,dy)<10&&dt<500)step(1);
+  });
+})();
+$('bNext').onclick=()=>step(1);
+$('bBack').onclick=()=>step(-1);
+$('bPlay').onclick=playAuto;
+
+/* Views */
+function show(v){
+  if(!['plays','drill','cards','sheet'].includes(v))v='plays';
+  document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  if(v!=='plays')stop();
+  $('main').scrollTop=0;
+  $('main').classList.toggle('fit',v==='plays');
+  if(v==='plays')requestAnimationFrame(()=>centerChip(false));
+  if(location.hash!=='#'+v)history.replaceState(null,'','#'+v);
+}
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>show(b.dataset.v));
+window.addEventListener('hashchange',()=>show(location.hash.slice(1)));
+function watch(cid){const c=CALLS.find(x=>x.id===cid);show('plays');openPlay(c.p,c.f);}
+
+/* Drill */
+const shuffle=(a)=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+let best=0;try{best=+localStorage.getItem('laxBest')||0;}catch(e){}
+const drill={mode:'call',qs:[],i:0,score:0,streak:0,answered:false};
+function newRound(){drill.qs=shuffle(CALLS).slice(0,10);drill.i=0;drill.score=0;drill.streak=0;drill.answered=false;drawQ();}
+function optionsFor(c){
+  const same=shuffle(CALLS.filter(x=>x.id!==c.id&&x.g===c.g));
+  const other=shuffle(CALLS.filter(x=>x.id!==c.id&&x.g!==c.g));
+  const picks=[];
+  for(const x of same.concat(other)){
+    if(picks.length===3)break;
+    const lab=drill.mode==='call'?x.s:x.n;
+    const tgt=drill.mode==='call'?c.s:c.n;
+    if(lab===tgt||picks.some(p=>(drill.mode==='call'?p.s:p.n)===lab))continue;
+    picks.push(x);
+  }
+  return shuffle(picks.concat([c]));
+}
+function stats(){return `<div class="stats"><div class="stat"><b>${Math.min(drill.i+1,10)}/10</b><span>Question</span></div><div class="stat"><b>${drill.score}</b><span>Score</span></div><div class="stat"><b>${drill.streak}</b><span>Streak</span></div></div>`;}
+function drawQ(){
+  const body=$('drillBody');
+  if(drill.i>=drill.qs.length){
+    if(drill.score>best){best=drill.score;try{localStorage.setItem('laxBest',best);}catch(e){}}
+    const msg=drill.score===10?'Perfect round. Coach would be proud.':drill.score>=7?'Strong round. Run it again to get them all.':'Good start. Watch the plays you missed, then go again.';
+    body.innerHTML=`<div class="card prompt"><p class="q">Round over</p><p class="big">${drill.score} / 10</p><p class="q" style="margin-top:8px">Best: ${best} / 10</p></div><p class="note" style="text-align:center">${msg}</p><button class="btn primary" id="again">Play again</button>`;
+    $('again').onclick=newRound;return;
+  }
+  const c=drill.qs[drill.i];drill.answered=false;
+  const prompt=drill.mode==='call'
+    ?`<p class="q">Coach yells</p><p class="big">${esc(c.n)}!</p><p class="q" style="margin-top:8px">${grpName(c.g)}. What does it mean?</p>`
+    :`<p class="q">Which call is this? (${grpName(c.g)})</p><p class="mid">${esc(c.s)}</p>`;
+  const opts=optionsFor(c);
+  body.innerHTML=stats()+`<div class="card prompt">${prompt}</div><div class="opts">${opts.map(o=>`<button class="opt" data-id="${o.id}">${esc(drill.mode==='call'?o.s:o.n)}</button>`).join('')}</div><div id="fb"></div>`;
+  body.querySelectorAll('.opt').forEach(b=>b.onclick=()=>answer(b,c));
+}
+function answer(btn,c){
+  if(drill.answered)return;drill.answered=true;
+  const ok=btn.dataset.id===c.id;
+  document.querySelectorAll('.opt').forEach(b=>{b.disabled=true;if(b.dataset.id===c.id)b.classList.add('right');});
+  if(!ok)btn.classList.add('wrong');
+  if(ok){drill.score++;drill.streak++;}else drill.streak=0;
+  const cheers=['Nice!','You got it!','Locked in!','That’s right!','Eat!'];
+  $('fb').innerHTML=`<div class="fb ${ok?'good':'bad'}"><h3>${ok?cheers[Math.floor(Math.random()*cheers.length)]:'Not quite. It’s '+esc(c.n)+'.'}</h3><p>${esc(c.kid)}</p><div class="row"><button class="btn" id="dWatch">Watch it</button><button class="btn primary" id="dNext">${drill.i===9?'See score':'Next'}</button></div></div>`;
+  $('dWatch').onclick=()=>watch(c.id);
+  $('dNext').onclick=()=>{drill.i++;drawQ();};
+  document.querySelector('.stats').outerHTML=stats();
+  $('fb').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+document.querySelectorAll('#dMode button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#dMode button').forEach(x=>x.classList.toggle('on',x===b));
+  drill.mode=b.dataset.m;newRound();
+});
+
+/* Cards */
+const cards={list:CALLS.slice(),i:0,flipped:false,g:'all'};
+function deck(){cards.list=CALLS.filter(c=>cards.g==='all'||c.g===cards.g);cards.i=0;cards.flipped=false;drawCard();}
+function drawCard(){
+  const c=cards.list[cards.i],el=$('flash');
+  el.className='flash '+(cards.flipped?'back':'front');
+  el.innerHTML=cards.flipped
+    ?`<p class="hint">${grpName(c.g)} · ${esc(c.n)}</p><p class="kid">${esc(c.kid)}</p><p class="coach"><b>Coach:</b> ${esc(c.coach)}</p><button class="watch" id="fWatch">Watch it on the field</button>`
+    :`<p class="hint">${grpName(c.g)}</p><p class="big">${esc(c.n)}</p><p class="hint">Say what it means, then tap to flip</p>`;
+  const w=$('fWatch');if(w)w.onclick=(e)=>{e.stopPropagation();watch(c.id);};
+  $('cCount').textContent=`${cards.i+1} of ${cards.list.length}`;
+}
+$('flash').onclick=()=>{cards.flipped=!cards.flipped;drawCard();};
+$('flash').onkeydown=(e)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();cards.flipped=!cards.flipped;drawCard();}};
+$('cNext').onclick=()=>{cards.i=(cards.i+1)%cards.list.length;cards.flipped=false;drawCard();};
+$('cPrev').onclick=()=>{cards.i=(cards.i-1+cards.list.length)%cards.list.length;cards.flipped=false;drawCard();};
+$('cShuf').onclick=()=>{cards.list=shuffle(cards.list);cards.i=0;cards.flipped=false;drawCard();};
+document.querySelectorAll('#cFilter button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#cFilter button').forEach(x=>x.classList.toggle('on',x===b));
+  cards.g=b.dataset.g;deck();
+});
+let tx0=null;
+$('flash').addEventListener('touchstart',e=>{tx0=e.touches[0].clientX;},{passive:true});
+$('flash').addEventListener('touchend',e=>{if(tx0===null)return;const dx=e.changedTouches[0].clientX-tx0;tx0=null;if(Math.abs(dx)>50){e.preventDefault();(dx<0?$('cNext'):$('cPrev')).click();}});
+
+/* Sheet */
+function drawSheet(){
+  ['6v6','md'].forEach(g=>{
+    $(g==='md'?'sMD':'s66').innerHTML=CALLS.filter(c=>c.g===g).map(c=>`<div class="item"><div class="nm">${esc(c.n)}</div><div><p class="cw">${esc(c.coach)}</p><p class="kw">${esc(c.kid)}</p></div><button class="watch" data-c="${c.id}">Watch</button></div>`).join('');
+  });
+  document.querySelectorAll('.item .watch').forEach(b=>b.onclick=()=>watch(b.dataset.c));
+}
+
+drawSheet();deck();newRound();openPlay('slide',0);
+show(location.hash.slice(1)||'plays');
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});}
+</script>
+</body>
+</html>
